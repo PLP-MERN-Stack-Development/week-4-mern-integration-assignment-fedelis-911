@@ -55,18 +55,23 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB and start server
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
+const startServer = async () => {
+  try {
+    // Try to connect to MongoDB
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1);
+  } catch (err) {
+    console.log('MongoDB connection failed, running in demo mode without database');
+    console.log('Error:', err.message);
+  }
+  
+  // Start server regardless of MongoDB connection
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
   });
+};
+
+startServer();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

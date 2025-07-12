@@ -41,10 +41,13 @@ api.interceptors.response.use(
 // Post API services
 export const postService = {
   // Get all posts with optional pagination and filters
-  getAllPosts: async (page = 1, limit = 10, category = null) => {
+  getAllPosts: async (page = 1, limit = 10, category = null, search = null) => {
     let url = `/posts?page=${page}&limit=${limit}`;
     if (category) {
       url += `&category=${category}`;
+    }
+    if (search) {
+      url += `&search=${search}`;
     }
     const response = await api.get(url);
     return response.data;
@@ -58,13 +61,35 @@ export const postService = {
 
   // Create a new post
   createPost: async (postData) => {
-    const response = await api.post('/posts', postData);
+    const formData = new FormData();
+    Object.keys(postData).forEach(key => {
+      if (postData[key] !== null && postData[key] !== undefined) {
+        formData.append(key, postData[key]);
+      }
+    });
+    
+    const response = await api.post('/posts', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   // Update an existing post
   updatePost: async (id, postData) => {
-    const response = await api.put(`/posts/${id}`, postData);
+    const formData = new FormData();
+    Object.keys(postData).forEach(key => {
+      if (postData[key] !== null && postData[key] !== undefined) {
+        formData.append(key, postData[key]);
+      }
+    });
+    
+    const response = await api.put(`/posts/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -77,12 +102,6 @@ export const postService = {
   // Add a comment to a post
   addComment: async (postId, commentData) => {
     const response = await api.post(`/posts/${postId}/comments`, commentData);
-    return response.data;
-  },
-
-  // Search posts
-  searchPosts: async (query) => {
-    const response = await api.get(`/posts/search?q=${query}`);
     return response.data;
   },
 };
@@ -131,6 +150,19 @@ export const authService = {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
+
+  // Get user profile
+  getProfile: async () => {
+    const response = await api.get('/auth/me');
+    return response.data;
+  },
+
+  // Update user profile
+  updateProfile: async (profileData) => {
+    const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  },
 };
 
-export default api; 
+export default api;
+
